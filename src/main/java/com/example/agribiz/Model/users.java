@@ -110,6 +110,13 @@ public class users {
     public void setUpdatedAt() {
         this.updatedAt = LocalDateTime.now();
     }
+
+    public String getAddress() {
+        return address;
+    }
+    public void setAddress(String address) {
+        this.address = address;
+    }
     //    private String verficationToken;
 //    private boolean isVerified;
 }
