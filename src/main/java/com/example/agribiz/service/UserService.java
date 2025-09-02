@@ -1,9 +1,8 @@
 package com.example.agribiz.service;
 
 import com.example.agribiz.Model.UserRole;
-import com.example.agribiz.Model.users;
+import com.example.agribiz.Model.User;
 import com.example.agribiz.repository.UserRepository;
-import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,45 +18,57 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public users createUser(users user) {
+    public User createUser(User user) {
         // Check if email already exists
         if (userRepository.existsByEmail(user.getEmail())) {
-            throw new RuntimeException("Email already exists"); // We'll improve error handling later
+            throw new RuntimeException("Email already exists");
         }
         return userRepository.save(user);
     }
 
-    public List<users> getAllUsers() {
+    public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
-    public Optional<users> getUserById(Long id) {
+    public Optional<User> getUserById(Long id) {
         return userRepository.findById(id);
     }
 
-    public Optional<users> getUserByEmail(String email) {
+    public Optional<User> getUserByEmail(String email) {
         return userRepository.findByEmail(email);
     }
 
-    public List<users> getUsersByRole(UserRole role) {
+    public List<User> getUsersByRole(UserRole role) {
         return userRepository.findByRole(role);
     }
 
-    public users updateUser(Long id, users userDetails) {
+    public User updateUser(Long id, User userDetails) {
         return userRepository.findById(id)
                 .map(user -> {
+                    // Pass and Role are not updatable
                     user.setUsername(userDetails.getUsername());
+
+                    // validation for unique emails
+                    if (!user.getEmail().equals(userDetails.getEmail()) &&
+                            userRepository.existsByEmail(userDetails.getEmail())) {
+                        throw new RuntimeException("Email already exists");
+                    }
                     user.setEmail(userDetails.getEmail());
-                    user.setPassword(userDetails.getPassword()); // We'll improve this later
-                    user.setRole(userDetails.getRole());
+
+
                     user.setAddress(userDetails.getAddress());
                     user.setPhoneNumber(userDetails.getPhoneNumber());
+
                     return userRepository.save(user);
                 })
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
     }
 
-    public void deleteUser(Long id) {
-        userRepository.deleteById(id);
+    public boolean deleteUser(Long id) {
+        if (userRepository.existsById(id)) {
+            userRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
 }

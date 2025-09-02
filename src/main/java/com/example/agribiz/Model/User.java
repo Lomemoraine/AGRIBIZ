@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
-public class users {
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -20,8 +20,8 @@ public class users {
     @Column(nullable = false, unique = true)
     private String email;
 
-    private Long NationalId;
-    private Long phoneNumber;
+    private String NationalId;
+    private String phoneNumber;
     private String address;
 
     @Enumerated(EnumType.STRING)
@@ -34,17 +34,20 @@ public class users {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public users() {
+    public User() {
     }
 
     // Constructor with parameters
-    public users(String username, String email, String password, UserRole role) {
+    public User(String username, String email, String password, UserRole role) {
         this.username = username;
         this.email = email;
         this.password = password;
         this.role = role;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+    }
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
 
     public Long getId() {
@@ -59,10 +62,10 @@ public class users {
     public void setUsername(String username) {
         this.username = username;
     }
-    public Long getPhoneNumber() {
+    public String getPhoneNumber() {
         return phoneNumber;
     }
-    public void setPhoneNumber(Long phoneNumber) {
+    public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
     public String getPassword() {
@@ -77,10 +80,10 @@ public class users {
     public void setEmail(String email) {
         this.email = email;
     }
-    public Long getNationalId() {
+    public String getNationalId() {
         return NationalId;
     }
-    public void setNationalId(Long nationalId) {
+    public void setNationalId(String nationalId) {
        this.NationalId = nationalId;
     }
     public UserRole getRole() {
@@ -117,6 +120,5 @@ public class users {
     public void setAddress(String address) {
         this.address = address;
     }
-    //    private String verficationToken;
-//    private boolean isVerified;
+
 }
