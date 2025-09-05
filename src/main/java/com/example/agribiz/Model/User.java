@@ -54,11 +54,13 @@ public class User implements UserDetails {
         this.password = password;
         this.role = role;
     }
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
+
     @PreUpdate
     public void setUpdatedAt() {
         this.updatedAt = LocalDateTime.now();
@@ -69,29 +71,32 @@ public class User implements UserDetails {
 
         return List.of(new SimpleGrantedAuthority(role.name()));
     }
+
+    @Override
+    public String getUsername() {
+        return email;
+    }
+
+
     @Override
     public boolean isAccountNonExpired() {
-        return UserDetails.super.isAccountNonExpired();
+        return true;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return UserDetails.super.isAccountNonLocked();
+        return true;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return UserDetails.super.isCredentialsNonExpired();
+        return true;
     }
 
     @Override
     public boolean isEnabled() {
-        return UserDetails.super.isEnabled();
+        return true;
     }
-
-
-
-
-
-
 }
+
+
