@@ -60,25 +60,26 @@ public class UserService {
 
                     user.setAddress(userDetails.getAddress());
                     user.setPhoneNumber(userDetails.getPhoneNumber());
+                    user.setNationalId(userDetails.getNationalId());
 
-                    // Only update password if a new one is provided
-                    if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
-                        user.setPassword(passwordEncoder.encode(userDetails.getPassword()));
-                    }
+//                    // Only update password if a new one is provided
+//                    if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
+//                        user.setPassword(passwordEncoder.encode(userDetails.getPassword()));
+//                    }
 
                     return userRepository.save(user);
                 })
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
     }
 
-    // Add a dedicated method for password changes
-    public void changePassword(Long id, String newPassword) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
-
-        user.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(user);
-    }
+    // Add a dedicated method for password changes(WORK ON THIS WHEN WORKING ON PASSWORD UPDATE)
+//    public void changePassword(Long id, String newPassword) {
+//        User user = userRepository.findById(id)
+//                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+//
+//        user.setPassword(passwordEncoder.encode(newPassword));
+//        userRepository.save(user);
+//    }
 
     public boolean deleteUser(Long id) {
         if (userRepository.existsById(id)) {

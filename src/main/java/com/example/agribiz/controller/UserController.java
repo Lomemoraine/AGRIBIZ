@@ -7,6 +7,7 @@ import com.example.agribiz.dto.UserResponseDTO;
 import com.example.agribiz.mapper.UserMapper;
 import com.example.agribiz.service.UserService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +15,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -73,12 +73,17 @@ public class UserController {
         UserResponseDTO responseDTO = userMapper.toResponseDTO(updatedUser);
         return ResponseEntity.ok(responseDTO);
     }
-
-    @PatchMapping("/{id}/password")
-    public ResponseEntity<?> changePassword(@PathVariable Long id, @RequestBody String newPassword) {
-        userService.changePassword(id, newPassword);
-        return ResponseEntity.ok().body("Password updated successfully");
-    }
+//WORK ON THIS LATER WHEN IMPLEMENTING PASSWORD RESET
+//    @PatchMapping("/{id}/password")
+//    public ResponseEntity<?> changePassword(
+//            @PathVariable Long id,
+//            @RequestBody
+//            @Size(min = 6)
+//            String newPassword) {
+//
+//        userService.changePassword(id, newPassword);
+//        return ResponseEntity.ok().body("Password updated successfully");
+//    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
@@ -86,61 +91,4 @@ public class UserController {
         return ResponseEntity.ok().body("User deleted successfully");
     }
 
-//    private final UserService userService;
-//
-//    @Autowired
-//    public UserController(UserService userService) {
-//        this.userService = userService;
-//    }
-//
-//    @PostMapping
-//    public User createUser(@RequestBody User user) {
-//        return userService.createUser(user);
-//    }
-//
-//    @GetMapping
-//    public List<User> getAllUsers() {
-//        return userService.getAllUsers();
-//    }
-//
-//    @GetMapping("/{id}")
-//    public ResponseEntity<User> getUserById(@PathVariable Long id) {
-//        Optional<User> user = userService.getUserById(id);
-//        return user.map(ResponseEntity::ok)
-//                .orElse(ResponseEntity.notFound().build());
-//    }
-//
-//    @GetMapping("/email/{email}")
-//    public ResponseEntity<User> getUserByEmail(@PathVariable String email) {
-//        Optional<User> user = userService.getUserByEmail(email);
-//        return user.map(ResponseEntity::ok)
-//                .orElse(ResponseEntity.notFound().build());
-//    }
-//
-//    @GetMapping("/role/{role}")
-//    public List<User> getUsersByRole(@PathVariable UserRole role) {
-//        return userService.getUsersByRole(role);
-//    }
-//
-//    @PutMapping("/{id}")
-//    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
-//        try {
-//            User updatedUser = userService.updateUser(id, userDetails);
-//            return ResponseEntity.ok(updatedUser);
-//        } catch (RuntimeException e) {
-//            if (e.getMessage().contains("not found")) {
-//                return ResponseEntity.notFound().build();
-//            }
-//            return ResponseEntity.badRequest().body(e.getMessage());
-//        }
-//    }
-//
-//    @DeleteMapping("/{id}")
-//    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-//        boolean deleted = userService.deleteUser(id);
-//        if (deleted) {
-//            return ResponseEntity.ok().body("User deleted successfully");
-//        }
-//        return ResponseEntity.notFound().build();
-//    }
 }

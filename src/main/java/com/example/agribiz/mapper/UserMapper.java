@@ -16,6 +16,7 @@ public class UserMapper {
         user.setRole(userRequestDTO.getRole());
         user.setAddress(userRequestDTO.getAddress());
         user.setPhoneNumber(userRequestDTO.getPhoneNumber());
+        user.setNationalId(userRequestDTO.getNationalId());
         return user;
     }
 
@@ -29,6 +30,7 @@ public class UserMapper {
         responseDTO.setPhoneNumber(user.getPhoneNumber());
         responseDTO.setCreatedAt(user.getCreatedAt());
         responseDTO.setUpdatedAt(user.getUpdatedAt());
+        responseDTO.setNationalId(user.getNationalId());
         return responseDTO;
     }
 }
