@@ -25,5 +25,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
         return;
     }
+        assert authorizationHeader != null;
+        jwtToken =authorizationHeader.substring(7);
     }
 }
