@@ -18,6 +18,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
-
+    final String authorizationHeader = request.getHeader("Authorization");
+    final String jwtToken;
+    //First Checkpoint of authentication,header shoul not be null and the it should start with Bearer with a space
+    if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+        filterChain.doFilter(request, response);
+        return;
+    }
     }
 }
