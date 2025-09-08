@@ -30,6 +30,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
         assert authorizationHeader != null;
         jwtToken =authorizationHeader.substring(7);
-        userEmail = jwtService.extractUsername();
+        userEmail = jwtService.extractUsername(jwtToken);
     }
 }
