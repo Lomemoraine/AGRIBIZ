@@ -25,7 +25,9 @@ public class User implements UserDetails {
     private Long id;
 
     @Column(nullable = false)
-    private String username;
+    private String firstName;
+    @Column(nullable = false)
+    private String lastName;
 
     @Column(nullable = false)
     private String password;
@@ -48,8 +50,9 @@ public class User implements UserDetails {
     private LocalDateTime updatedAt;
 
     // Constructor with parameters
-    public User(String username, String email, String password, UserRole role) {
-        this.username = username;
+    public User(String firstName,String lastName, String email, String password, UserRole role) {
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.email = email;
         this.password = password;
         this.role = role;
