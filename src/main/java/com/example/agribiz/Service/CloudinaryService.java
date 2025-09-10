@@ -1,6 +1,7 @@
 package com.example.agribiz.Service;
 
 import com.cloudinary.Cloudinary;
+import com.cloudinary.Transformation;
 import com.cloudinary.utils.ObjectUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,15 +43,17 @@ public class CloudinaryService {
 
         validateFile(file);
 
+        // Create transformation using the Transformation class
+        Transformation transformation = new Transformation()
+                .width(400)
+                .height(400)
+                .crop("fill")
+                .gravity("face");
+
         Map<String, Object> uploadOptions = ObjectUtils.asMap(
                 "resource_type", "image",
                 "folder", "potato-platform/profiles",
-                "transformation", ObjectUtils.asMap(
-                        "width", 400,
-                        "height", 400,
-                        "crop", "fill",
-                        "gravity", "face"
-                )
+                "transformation", transformation
         );
 
         Map uploadResult = getCloudinary().uploader().upload(file.getBytes(), uploadOptions);

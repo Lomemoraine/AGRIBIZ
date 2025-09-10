@@ -33,7 +33,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
-        if (request.getServletPath().contains("/api/v1/auth")) {
+        final String path = request.getServletPath();
+        if (path.equals("/api/v1/auth/register") ||
+                path.equals("/api/v1/auth/login") ||
+                path.equals("/api/v1/auth/refresh-token")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -43,6 +46,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String userEmail;
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            log.debug("No valid Authorization header found for path: {}", path);
             filterChain.doFilter(request, response);
             return;
         }
@@ -51,6 +55,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             userEmail = jwtService.extractUsername(jwt);
+            log.debug("Extracted username from JWT: {}", userEmail);
 
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
@@ -66,6 +71,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     );
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                     log.debug("User {} authenticated successfully", userEmail);
+                } else {
+                    log.debug("JWT token is invalid for user: {}", userEmail);
                 }
             }
         } catch (Exception e) {
