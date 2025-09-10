@@ -111,10 +111,3 @@ public class User implements UserDetails {
     }
 }
 
-enum Role {
-    FARMER,
-    BUYER,
-    INVESTOR,
-    ADMIN
-}
-
