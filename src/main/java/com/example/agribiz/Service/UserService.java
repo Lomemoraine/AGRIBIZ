@@ -3,16 +3,16 @@ package com.example.agribiz.Service;
 import com.example.agribiz.Dto.*;
 import com.example.agribiz.Model.User;
 import com.example.agribiz.Repository.UserRepository;
-import jakarta.transaction.Transactional;
+import com.example.agribiz.Exception.UserNotFoundException;
+import com.example.agribiz.Exception.UserAlreadyExistsException;
+import com.example.agribiz.Exception.InvalidTokenException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
@@ -22,7 +22,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 @Transactional
-public class UserService implements UserDetailsService {
+public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -30,12 +30,6 @@ public class UserService implements UserDetailsService {
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
     private final CloudinaryService cloudinaryService;
-
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
-    }
 
     public AuthenticationResponse register(RegisterRequest request) {
         log.info("Attempting to register user with email: {}", request.getEmail());
