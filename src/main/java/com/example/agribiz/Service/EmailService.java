@@ -83,3 +83,17 @@ public class EmailService {
         return String.format(
                 "Dear %s,\n\n" +
                         "We received a request to reset your password for your %s account.\n\n" +
+                        "To reset your password, please click on the following link:\n" +
+                        "%s\n\n" +
+                        "This link will expire in 24 hours for security reasons.\n\n" +
+                        "If you did not request this password reset, please ignore this email and your password will remain unchanged.\n\n" +
+                        "For security reasons, please do not share this link with anyone.\n\n" +
+                        "Best regards,\n" +
+                        "The %s Team",
+                user.getFullName(),
+                appName,
+                resetUrl,
+                appName
+        );
+    }
+}
