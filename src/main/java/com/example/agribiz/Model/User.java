@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -16,63 +18,67 @@ import java.util.List;
 @Entity
 @Table(name = "users")
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class User implements UserDetails {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
     private String firstName;
-    @Column(nullable = false)
-    private String lastName;
 
     @Column(nullable = false)
-    private String password;
+    private String lastName;
 
     @Column(nullable = false, unique = true)
     private String email;
 
-    private String nationalId;
-    private String phoneNumber;
-    private String address;
+    @Column(nullable = false)
+    private String password;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private UserRole role;
+    private Role role;
 
-    @Column(name = "created_at")
+    // Profile additional details
+    private String profileImageUrl;
+    private String nationalId;
+    private String address;
+    private String phoneNumber;
+    private String bio;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean enabled = true;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean accountNonExpired = true;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean accountNonLocked = true;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean credentialsNonExpired = true;
+
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    // Constructor with parameters
-    public User(String firstName,String lastName, String email, String password, UserRole role) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.email = email;
-        this.password = password;
-        this.role = role;
-    }
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    public void setUpdatedAt() {
-        this.updatedAt = LocalDateTime.now();
-    }
+    // Password reset fields
+    private String resetToken;
+    private LocalDateTime resetTokenExpiry;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-
-        return List.of(new SimpleGrantedAuthority(role.name()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override
@@ -80,26 +86,35 @@ public class User implements UserDetails {
         return email;
     }
 
-
     @Override
     public boolean isAccountNonExpired() {
-        return true;
+        return accountNonExpired;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return accountNonLocked;
     }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return true;
+        return credentialsNonExpired;
     }
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return enabled;
+    }
+
+    public String getFullName() {
+        return firstName + " " + lastName;
     }
 }
 
+enum Role {
+    FARMER,
+    BUYER,
+    INVESTOR,
+    ADMIN
+}
 
