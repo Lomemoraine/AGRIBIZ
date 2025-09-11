@@ -24,6 +24,27 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String fromEmail;
 
+    public void sendVerificationEmail(User user, String otp) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
+            message.setTo(user.getEmail());
+            message.setSubject("Verify Your Email - " + appName);
+            message.setText(buildVerificationEmailContent(user, otp));
+
+            mailSender.send(message);
+            log.info("Verification email sent successfully to: {}", user.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to send verification email to: {}", user.getEmail(), e);
+        }
+    }
+
+    public String generateOTP() {
+        // Generate a 6-digit OTP
+        int otp = 100000 + secureRandom.nextInt(900000);
+        return String.valueOf(otp);
+    }
+
     public void sendWelcomeEmail(User user) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
@@ -93,6 +114,24 @@ public class EmailService {
                 user.getFullName(),
                 appName,
                 resetUrl,
+                appName
+        );
+
+    }
+
+    private String buildVerificationEmailContent(User user, String otp) {
+        return String.format(
+                "Dear %s,\n\n" +
+                        "Thank you for registering with %s!\n\n" +
+                        "To complete your account setup, please verify your email address using the OTP code below:\n\n" +
+                        "Verification Code: %s\n\n" +
+                        "This code will expire in 10 minutes for security reasons.\n\n" +
+                        "If you did not create an account with us, please ignore this email.\n\n" +
+                        "Best regards,\n" +
+                        "The %s Team",
+                user.getFullName(),
+                appName,
+                otp,
                 appName
         );
     }
