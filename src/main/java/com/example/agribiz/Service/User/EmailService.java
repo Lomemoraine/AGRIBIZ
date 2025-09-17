@@ -1,4 +1,4 @@
-package com.example.agribiz.Service;
+package com.example.agribiz.Service.User;
 
 import com.example.agribiz.Model.User;
 import lombok.RequiredArgsConstructor;
@@ -8,12 +8,15 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class EmailService {
 
     private final JavaMailSender mailSender;
+    private final SecureRandom secureRandom = new SecureRandom();
 
     @Value("${app.name}")
     private String appName;

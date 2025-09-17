@@ -1,9 +1,7 @@
-package com.example.agribiz.Dto;
+package com.example.agribiz.Dto.Request;
+import com.example.agribiz.CustomAnnotations.PasswordMatches;
 import com.example.agribiz.Model.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,6 +12,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@PasswordMatches
 public class RegisterRequest {
 
     @NotBlank(message = "First name is required")
@@ -30,7 +29,12 @@ public class RegisterRequest {
 
     @NotBlank(message = "Password is required")
     @Size(min = 8, message = "Password must be at least 8 characters")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).*$",
+            message = "Password must contain at least one uppercase letter, one lowercase letter, and one number")
     private String password;
+
+    @NotBlank(message = "Please confirm your password")
+    private String confirmPassword;
 
     @NotNull(message = "Role is required")
     private Role role;

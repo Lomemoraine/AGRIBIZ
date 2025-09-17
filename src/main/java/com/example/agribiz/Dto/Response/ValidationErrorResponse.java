@@ -1,4 +1,4 @@
-package com.example.agribiz.Dto;
+package com.example.agribiz.Dto.Response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

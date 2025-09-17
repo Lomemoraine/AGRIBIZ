@@ -1,6 +1,6 @@
 package com.example.agribiz.Security;
 
-import com.example.agribiz.Service.JwtService;
+import com.example.agribiz.Service.User.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

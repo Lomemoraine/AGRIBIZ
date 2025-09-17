@@ -1,4 +1,4 @@
-package com.example.agribiz.Service;
+package com.example.agribiz.Service.User;
 
 import com.example.agribiz.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;

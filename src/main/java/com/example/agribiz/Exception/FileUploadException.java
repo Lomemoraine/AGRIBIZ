@@ -1,7 +1,7 @@
 package com.example.agribiz.Exception;
 
 // File Upload Exception
-public class FileUploadException extends RuntimeException {
+public class                                                                                    FileUploadException extends RuntimeException {
     public FileUploadException(String message) {
         super(message);
     }

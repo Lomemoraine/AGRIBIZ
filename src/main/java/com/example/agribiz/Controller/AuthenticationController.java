@@ -1,7 +1,13 @@
 package com.example.agribiz.Controller;
 
-import com.example.agribiz.Dto.ApiResponse;
-import com.example.agribiz.Dto.*;
+import com.example.agribiz.Dto.Request.*;
+import com.example.agribiz.Dto.Response.ApiResponse;
+import com.example.agribiz.Dto.Response.AuthenticationResponse;
+import com.example.agribiz.Dto.Response.UserInfo;
+import com.example.agribiz.Dto.Response.VerificationResponse;
+import com.example.agribiz.Exception.InvalidOtpException;
+import com.example.agribiz.Exception.UserAlreadyExistsException;
+import com.example.agribiz.Exception.UserNotFoundException;
 import com.example.agribiz.Service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,20 +28,138 @@ public class AuthenticationController {
 
     private final UserService userService;
 
-    @PostMapping("/register")
-    public ResponseEntity<ApiResponse<AuthenticationResponse>> register(
-            @Valid @RequestBody RegisterRequest request
-    ) {
-        log.info("Registration request received for email: {}", request.getEmail());
 
-        AuthenticationResponse response = userService.register(request);
+//    @PostMapping("/register")
+//    public ResponseEntity<ApiResponse<AuthenticationResponse>> register(
+//            @Valid @RequestBody RegisterRequest request
+//    ) {
+//        log.info("Registration request received for email: {}", request.getEmail());
+//
+//        AuthenticationResponse response = userService.register(request);
+//
+//        return ResponseEntity.status(HttpStatus.CREATED)
+//                .body(ApiResponse.<AuthenticationResponse>builder()
+//                        .success(true)
+//                        .message("User registered successfully")
+//                        .data(response)
+//                        .build());
+//    }
+//@PostMapping("/register")
+//public ResponseEntity<VerificationResponse> register(
+//        @Valid @RequestBody RegisterRequest request ) {
+//    try {
+//        VerificationResponse response = userService.register(request);
+//        return ResponseEntity.ok(response);
+//    } catch (UserAlreadyExistsException e) {
+//        return ResponseEntity.badRequest()
+//                .body(VerificationResponse.builder()
+//                        .message(e.getMessage())
+//                        .success(false)
+//                        .build());
+//    } catch (Exception e) {
+//        log.error("Registration failed for email: {}", request.getEmail(), e);
+//        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                .body(VerificationResponse.builder()
+//                        .message("Registration failed. Please try again.")
+//                        .success(false)
+//                        .build());
+//    }
+//}
+@PostMapping("/register")
+public ResponseEntity<VerificationResponse> register(
+        @Valid @RequestBody RegisterRequest request,
+        BindingResult bindingResult) { // Add BindingResult parameter
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.<AuthenticationResponse>builder()
-                        .success(true)
-                        .message("User registered successfully")
-                        .data(response)
+    // Handle validation errors
+    if (bindingResult.hasErrors()) {
+        StringBuilder errorMessage = new StringBuilder();
+
+        // Collect field errors
+        bindingResult.getFieldErrors().forEach(error -> {
+            if (errorMessage.length() > 0) {
+                errorMessage.append(" ");
+            }
+            errorMessage.append(error.getDefaultMessage()).append(".");
+        });
+
+        // Collect global errors (like password mismatch)
+        bindingResult.getGlobalErrors().forEach(error -> {
+            if (errorMessage.length() > 0) {
+                errorMessage.append(" ");
+            }
+            errorMessage.append(error.getDefaultMessage()).append(".");
+        });
+
+        log.warn("Registration validation failed for email: {} - {}",
+                request.getEmail(), errorMessage.toString());
+
+        return ResponseEntity.badRequest()
+                .body(VerificationResponse.builder()
+                        .message(errorMessage.toString().trim())
+                        .success(false)
                         .build());
+    }
+
+    try {
+        VerificationResponse response = userService.register(request);
+        return ResponseEntity.ok(response);
+    } catch (UserAlreadyExistsException e) {
+        return ResponseEntity.badRequest()
+                .body(VerificationResponse.builder()
+                        .message(e.getMessage())
+                        .success(false)
+                        .build());
+    } catch (Exception e) {
+        log.error("Registration failed for email: {}", request.getEmail(), e);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(VerificationResponse.builder()
+                        .message("Registration failed. Please try again.")
+                        .success(false)
+                        .build());
+    }
+}
+    @PostMapping("/verify-email")
+    public ResponseEntity<VerificationResponse> verifyEmail(
+            @Valid @RequestBody VerifyEmailRequest request) {
+        try {
+            VerificationResponse response = userService.verifyEmail(request);
+            return ResponseEntity.ok(response);
+        } catch (UserNotFoundException | InvalidOtpException | IllegalStateException e) {
+            return ResponseEntity.badRequest()
+                    .body(VerificationResponse.builder()
+                            .message(e.getMessage())
+                            .success(false)
+                            .build());
+        } catch (Exception e) {
+            log.error("Email verification failed for email: {}", request.getEmail(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(VerificationResponse.builder()
+                            .message("Verification failed. Please try again.")
+                            .success(false)
+                            .build());
+        }
+    }
+
+    @PostMapping("/resend-otp")
+    public ResponseEntity<VerificationResponse> resendOtp(
+            @Valid @RequestBody ResendOtpRequest request) {
+        try {
+            VerificationResponse response = userService.resendOtp(request);
+            return ResponseEntity.ok(response);
+        } catch (UserNotFoundException | IllegalStateException e) {
+            return ResponseEntity.badRequest()
+                    .body(VerificationResponse.builder()
+                            .message(e.getMessage())
+                            .success(false)
+                            .build());
+        } catch (Exception e) {
+            log.error("Failed to resend OTP for email: {}", request.getEmail(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(VerificationResponse.builder()
+                            .message("Failed to resend OTP. Please try again.")
+                            .success(false)
+                            .build());
+        }
     }
 
     @PostMapping("/login")

@@ -1,13 +1,19 @@
 package com.example.agribiz.Service;
 
-import com.example.agribiz.Dto.*;
+import com.example.agribiz.Dto.Request.*;
+import com.example.agribiz.Dto.Response.AuthenticationResponse;
+import com.example.agribiz.Dto.Response.UserInfo;
+import com.example.agribiz.Dto.Response.VerificationResponse;
+import com.example.agribiz.Exception.*;
 import com.example.agribiz.Model.User;
 import com.example.agribiz.Repository.UserRepository;
-import com.example.agribiz.Exception.UserNotFoundException;
-import com.example.agribiz.Exception.UserAlreadyExistsException;
-import com.example.agribiz.Exception.InvalidTokenException;
+import com.example.agribiz.Service.User.CloudinaryService;
+import com.example.agribiz.Service.User.EmailService;
+import com.example.agribiz.Service.User.JwtService;
+import com.example.agribiz.Service.User.OtpService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,61 +36,180 @@ public class UserService {
     private final AuthenticationManager authenticationManager;
     private final EmailService emailService;
     private final CloudinaryService cloudinaryService;
+    private final OtpService otpService;
 
-    public AuthenticationResponse register(RegisterRequest request) {
-        log.info("Attempting to register user with email: {}", request.getEmail());
+    @Value("${app.name}")
+    private String appName;
 
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new UserAlreadyExistsException("User already exists with email: " + request.getEmail());
-        }
+//    public AuthenticationResponse register(RegisterRequest request) {
+//        log.info("Attempting to register user with email: {}", request.getEmail());
+//
+//        if (userRepository.existsByEmail(request.getEmail())) {
+//            throw new UserAlreadyExistsException("User already exists with email: " + request.getEmail());
+//        }
+//
+//        var user = User.builder()
+//                .firstName(request.getFirstName())
+//                .lastName(request.getLastName())
+//                .email(request.getEmail())
+//                .password(passwordEncoder.encode(request.getPassword()))
+//                .role(request.getRole())
+//                .build();
+//
+//        var savedUser = userRepository.save(user);
+//        log.info("User registered successfully with ID: {}", savedUser.getId());
+//
+//        // Send welcome email
+//        emailService.sendWelcomeEmail(savedUser);
+//
+//        var jwtToken = jwtService.generateToken(user);
+//        var userInfo = mapToUserInfo(savedUser);
+//
+//        return AuthenticationResponse.builder()
+//                .token(jwtToken)
+//                .user(userInfo)
+//                .build();
+//    }
+public VerificationResponse register(RegisterRequest request) {
+    log.info("Attempting to register user with email: {}", request.getEmail());
 
-        var user = User.builder()
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole())
-                .build();
-
-        var savedUser = userRepository.save(user);
-        log.info("User registered successfully with ID: {}", savedUser.getId());
-
-        // Send welcome email
-        emailService.sendWelcomeEmail(savedUser);
-
-        var jwtToken = jwtService.generateToken(user);
-        var userInfo = mapToUserInfo(savedUser);
-
-        return AuthenticationResponse.builder()
-                .token(jwtToken)
-                .user(userInfo)
-                .build();
+    if (userRepository.existsByEmail(request.getEmail())) {
+        throw new UserAlreadyExistsException("User already exists with email: " + request.getEmail());
     }
 
-    public AuthenticationResponse authenticate(LoginRequest request) {
-        log.info("Attempting to authenticate user: {}", request.getEmail());
+    var user = User.builder()
+            .firstName(request.getFirstName())
+            .lastName(request.getLastName())
+            .email(request.getEmail())
+            .password(passwordEncoder.encode(request.getPassword()))
+            .role(request.getRole())
+            .isVerified(false) // Set as unverified initially
+            .build();
 
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
+    var savedUser = userRepository.save(user);
+    log.info("User registered successfully with ID: {} - Pending email verification", savedUser.getId());
 
+    // Generate and send OTP for email verification
+    String fullName = savedUser.getFirstName() + " " + savedUser.getLastName();
+    otpService.generateAndSendOtp(savedUser.getEmail(), fullName);
+
+    return VerificationResponse.builder()
+            .message("Registration successful! Please check your email for verification code.")
+            .success(true)
+            .build();
+}
+    public VerificationResponse verifyEmail(VerifyEmailRequest request) {
+        log.info("Attempting to verify email: {}", request.getEmail());
+
+        // Find user by email
         var user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + request.getEmail()));
 
+        if (user.getIsVerified()) {
+            throw new IllegalStateException("User email is already verified");
+        }
+
+        // Verify OTP
+        if (!otpService.verifyOtp(request.getEmail(), request.getOtp())) {
+            throw new InvalidOtpException("Invalid or expired OTP");
+        }
+
+        // Update user verification status
+        user.setIsVerified(true);
+        userRepository.save(user);
+
+        log.info("Email verified successfully for user: {}", user.getEmail());
+
+        // Send welcome email
+        emailService.sendWelcomeEmail(user);
+
+        // Generate JWT token
         var jwtToken = jwtService.generateToken(user);
         var userInfo = mapToUserInfo(user);
 
-        log.info("User authenticated successfully: {}", user.getEmail());
-
-        return AuthenticationResponse.builder()
+        var authResponse = AuthenticationResponse.builder()
                 .token(jwtToken)
                 .user(userInfo)
                 .build();
+
+        return VerificationResponse.builder()
+                .message("Email verified successfully! Welcome to " + appName)
+                .success(true)
+                .authenticationResponse(authResponse)
+                .build();
     }
 
+    // New method to resend OTP
+    public VerificationResponse resendOtp(ResendOtpRequest request) {
+        log.info("Attempting to resend OTP for email: {}", request.getEmail());
+
+        var user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + request.getEmail()));
+
+        if (user.getIsVerified()) {
+            throw new IllegalStateException("User email is already verified");
+        }
+
+        String fullName = user.getFirstName() + " " + user.getLastName();
+        otpService.resendOtp(user.getEmail(), fullName);
+
+        return VerificationResponse.builder()
+                .message("Verification code resent successfully! Please check your email.")
+                .success(true)
+                .build();
+    }
+
+//    public AuthenticationResponse authenticate(LoginRequest request) {
+//        log.info("Attempting to authenticate user: {}", request.getEmail());
+//
+//        authenticationManager.authenticate(
+//                new UsernamePasswordAuthenticationToken(
+//                        request.getEmail(),
+//                        request.getPassword()
+//                )
+//        );
+//
+//        var user = userRepository.findByEmail(request.getEmail())
+//                .orElseThrow(() -> new UserNotFoundException("User not found"));
+//
+//        var jwtToken = jwtService.generateToken(user);
+//        var userInfo = mapToUserInfo(user);
+//
+//        log.info("User authenticated successfully: {}", user.getEmail());
+//
+//        return AuthenticationResponse.builder()
+//                .token(jwtToken)
+//                .user(userInfo)
+//                .build();
+//    }
+public AuthenticationResponse authenticate(LoginRequest request) {
+    log.info("Attempting to authenticate user with email: {}", request.getEmail());
+
+    authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(
+                    request.getEmail(),
+                    request.getPassword()
+            )
+    );
+
+    var user = userRepository.findByEmail(request.getEmail())
+            .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+    // Check if user is verified
+    if (!user.getIsVerified()) {
+        throw new UnverifiedUserException("Please verify your email before logging in");
+    }
+
+    var jwtToken = jwtService.generateToken(user);
+    var userInfo = mapToUserInfo(user);
+
+    log.info("User authenticated successfully: {}", user.getEmail());
+
+    return AuthenticationResponse.builder()
+            .token(jwtToken)
+            .user(userInfo)
+            .build();
+}
     public UserInfo updateProfile(String userEmail, UpdateProfileRequest request) {
         log.info("Updating profile for user: {}", userEmail);
 

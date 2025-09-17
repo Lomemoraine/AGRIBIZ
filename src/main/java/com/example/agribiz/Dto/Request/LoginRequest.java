@@ -1,4 +1,4 @@
-package com.example.agribiz.Dto;
+package com.example.agribiz.Dto.Request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

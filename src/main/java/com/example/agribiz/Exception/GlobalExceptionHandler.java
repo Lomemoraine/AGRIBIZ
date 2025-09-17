@@ -1,7 +1,7 @@
 package com.example.agribiz.Exception;
 
-import com.example.agribiz.Dto.ValidationErrorResponse;
-import com.example.agribiz.Dto.ErrorResponse;
+import com.example.agribiz.Dto.Response.ValidationErrorResponse;
+import com.example.agribiz.Dto.Response.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
